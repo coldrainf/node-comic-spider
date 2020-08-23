@@ -60,5 +60,21 @@ module.exports = {
             headers
         })
     },
-    aes: new Aes()
+    aes: new Aes(),
+    spreadArray(array) {
+        let arr = JSON.parse(JSON.stringify(array)),
+            result = [],
+            index = 0
+        while(true) {
+            if(arr.length == 0) break
+            if(index >= arr.length) index = 0
+            if(arr[index].length == 0) {
+                arr.splice(index, 1)
+                continue
+            }
+            result.push(arr[index].shift())
+            index ++
+        }
+        return result
+    }
 }
