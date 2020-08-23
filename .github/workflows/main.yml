@@ -42,4 +42,4 @@ jobs:
         host: ${{ secrets.IP }}
         username: ${{ secrets.SSH_NAME }}
         password: ${{ secrets.SSH_PWD }}
-        script: ${{ secrets.SSH_SCRIPT }}
+        script: sh /www/dmapi.sh
