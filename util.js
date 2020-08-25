@@ -8,7 +8,7 @@ const UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/6
  * 作者 王磊
  */
 class Aes {
-    constructor(key='KA58ZAQ321oobbG1', iv='A1B2C3DEF1G321oo', mode='aes-128-cbc') {
+    constructor(key='KA58ZAQ321oobbG8', iv='A1B2C3DEF1G321o8', mode='aes-128-cbc') {
         this.key = key
         this.iv = iv
         this.mode = mode

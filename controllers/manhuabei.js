@@ -2,16 +2,28 @@ const cheerio = require('cheerio')
 const fetch = require('../util').fetch
 const aes = require('../util').aes
 
-const host = 'https://m.manhuabei.com'
-
 var filterData
 
 module.exports = {
+    name: "漫画呗",
+    host: "https://m.manhuabei.com",
+
     async filter(ctx) {
         if(filterData) return filterData
-        let html = await (await fetch(`${host}/list/`)).text(),
+        let html = await (await fetch(`${this.host}/list/`)).text(),
             $ = cheerio.load(html)
         return FilterData = [
+            {
+                id: 'order',
+                name: '排序',
+                default: 'update',
+                data: $('.sorter li').map((index, li) => {
+                    return {
+                        'id': $(li).children('a').attr('href').match(/\/list\/(.*?)\/$/)[1],
+                        'name': $(li).children('a').text()
+                    }
+                }).get()
+            },
             {
                 id: 'type',
                 name: '题材',
@@ -49,7 +61,8 @@ module.exports = {
         let type = ctx.query.type ? ctx.query.type : '',
             status = ctx.query.status ? ctx.query.status : '',
             area = ctx.query.area ?  ctx.query.area : '',
-            url = `${host}/list${(type || status || area) ? '/': ''}${type}${(type && status) ? '-': ''}${status}${status && area ? '-': ''}${area}/update/?page=${ctx.query.page ? ctx.query.page : 1}`,
+            order = ctx.query.order ?  ctx.query.order : 'update',
+            url = `${this.host}/list${(type || status || area) ? '/': ''}${type}${(type && status) ? '-': ''}${status}${status && area ? '-': ''}${area}/${order}/?page=${ctx.query.page ? ctx.query.page : 1}`,
             html = await (await fetch(url)).text(),
             $ = cheerio.load(html)
         return $('#comic-items>li').map((index, li) => {
@@ -57,16 +70,18 @@ module.exports = {
                 id: $(li).children('.txtA').attr('href').match(/\/manhua\/(.+)\//)[1],
                 name: $(li).children('.txtA').text(),
                 cover: $(li).find('a img').attr('src'),
-                lastChapter: $(li).find('span a').text()
+                lastChapterId: $(li).find('span a').attr('href').match(/\/(\d+)\.html$/)[1],
+                lastChapterName: $(li).find('span a').text(),
             }
         }).get()
     },
 
     async search(ctx) {
+        if(!ctx.query.kw) throw new Error('missing parameter')
         let json = await (await fetch(`https://api.manhuabei.com/comic/search?page=${ctx.query.page ? ctx.query.page : 1}`, {
                 method: 'POST',
                 body: JSON.stringify({
-                    keywords: ctx.query.kw ? ctx.query.kw : '',
+                    keywords: ctx.query.kw,
                 })
             })).json()
         return json.items.map(item => {
@@ -74,20 +89,21 @@ module.exports = {
                 id: item.slug,
                 name: item.name,
                 cover: item.coverUrl,
-                lastChapter: item.last_chapter_name,
+                lastChapterId: item.last_chapter_id,
+                lastChapterName: item.last_chapter_name,
             }
         })
     },
 
     async item(ctx) {
-        if(!ctx.query.id) throw new Error('')
-        let html = await (await fetch(`${host}/manhua/${ctx.query.id}/`)).text(),
+        if(!ctx.query.id) throw new Error('missing parameter')
+        let html = await (await fetch(`${this.host}/manhua/${ctx.query.id}/`)).text(),
             $ = cheerio.load(html)
         return {
             id: ctx.query.id,
             name: $('#comicName').text(),
             cover: $('#Cover').find('img').attr('src'),
-            author: $('.sub_r p:nth-child(1)').text().match(/^\s+(\S+)\s+$/)[1],
+            author: $('.sub_r p:nth-child(1)').text().match(/^\s+(\S+)\s+$/)[1].split(','),
             type: $('.sub_r p:nth-child(2) a').map((index, a) => $(a).text()).get(),
             area: $('.sub_r p:nth-child(3) a').eq(1).text(),
             status: $('.sub_r p:nth-child(3) a').eq(2).text(),
@@ -96,7 +112,7 @@ module.exports = {
             chapters: $('#list_block>div').map((index, div) => {
                 return {
                     title: $(div).find('.Title').text(),
-                    body: $(div).find('li a').map((index, a) => {
+                    data: $(div).find('li a').map((index, a) => {
                         return {
                             id: $(a).attr('href').match(/\/(\d+)\.html$/)[1],
                             name: $(a).find('span:nth-child(1)').text()
@@ -108,18 +124,20 @@ module.exports = {
     },
 
     async image(ctx) {
-        if(!ctx.query.id || !ctx.query.chapterId) throw new Error('')
-        let html = await (await fetch(`${host}/manhua/${ctx.query.id}/${ctx.query.chapterId}.html`)).text(),
+        if(!ctx.query.id || !ctx.query.chapterId) throw new Error('missing parameter')
+        let html = await (await fetch(`${this.host}/manhua/${ctx.query.id}/${ctx.query.chapterId}.html`)).text(),
             $ = cheerio.load(html),
             chapterName = $('.BarTit').text().match(/^\s+(\S+)\s+$/)[1],
             match = html.match(/var chapterImages = "(.*?)";var chapterPath = "(.*?)";/),
-            configHtml = await (await fetch(`${host}/js/config.js`)).text(),
+            configHtml = await (await fetch(`${this.host}/js/config.js`)).text(),
             imageHost = configHtml.match(/"自动选择","domain":\["(.+?)"\]/)[1],
             prev = JSON.parse(html.match(/var prevChapterData = (\{.*?\});/)[1]),
-            next = JSON.parse(html.match(/var nextChapterData = (\{.*?\});/)[1])
+            next = JSON.parse(html.match(/var nextChapterData = (\{.*?\});/)[1]),
+            cover = html.match(/var pageImage = "(.*?)";/)[1]
         return {
             id: ctx.query.id,
             name: $('head meta[name=keywords]').attr('content').replace(chapterName, ''),
+            cover,
             chapterId: ctx.query.chapterId,
             chapterName,
             images: aes.decryption(match[1]).match(/"(.+?)"/g).map(value => {
