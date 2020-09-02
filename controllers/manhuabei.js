@@ -2,17 +2,14 @@ const cheerio = require('cheerio')
 const fetch = require('../util').fetch
 const aes = require('../util').aes
 
-var filterData
-
 module.exports = {
     name: "漫画呗",
     host: "https://m.manhuabei.com",
 
     async filter(ctx) {
-        if(filterData) return filterData
         let html = await (await fetch(`${this.host}/list/`)).text(),
             $ = cheerio.load(html)
-        return FilterData = [
+        return [
             {
                 id: 'order',
                 name: '排序',

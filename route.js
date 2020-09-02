@@ -3,16 +3,29 @@ const fs = require('fs')
 const path = require('path')
 
 let files = fs.readdirSync(path.join(__dirname, 'controllers'))
+
+let addOrigin = (item, originId, originName) => {
+    if(!item.originId) {
+        item.originId = originId
+        item.originName = originName
+    }
+}
+
 for(let file of files) {
     let name = file.replace('.js','')
     let controller = require(`./controllers/${file}`)
     for(let c in controller) {
         if(typeof controller[c] === 'function') {
             router.get(`/${name}/${c}`, async ctx => {
+                let data = await controller[c](ctx)
+                if(name != 'all') {
+                    if(Array.isArray(data)) data.map(item => addOrigin(item, name, controller.name))
+                    else addOrigin(data, name, controller.name)
+                }
                 try {
                     ctx.body = {
                         code: 0,
-                        data: await controller[c](ctx)
+                        data
                     }
                 }catch(err) {
                     console.log(err)

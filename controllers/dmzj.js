@@ -1,25 +1,22 @@
 const cheerio = require('cheerio')
 const fetch = require('../util').fetch
 
-var filterData
-
 module.exports = {
     name: "动漫之家",
     host: "https://m.dmzj.com",
 
     async filter(ctx) {
-        if(filterData) return filterData
         let html = await (await fetch(`${this.host}/classify.html`)).text(),
             $ = cheerio.load(html)
-        return FilterData = [
+        return [
             {
                 id: 'order',
                 name: '排序',
                 default: '0',
                 data: $('.Sub_H2 a').map((index, a) => {
                     return {
-                        'id': $(a).attr('onclick').match(/sortClickAction\((\b+),/)[1],
-                        'name': $(a).children('a').text()
+                        'id': $(a).attr('onclick').match(/sortClickAction\((\d+),/)[1],
+                        'name': $(a).text()
                     }
                 }).get()
             },
@@ -36,7 +33,7 @@ module.exports = {
             {
                 id: 'status',
                 name: '进度',
-                data: $('.filter-item:nth-child(3) li').map((index, li) => {
+                data: $('#classCon ul:nth-child(3) li').map((index, li) => {
                     return {
                         'id': String(index),
                         'name': $(li).children('a').text()
@@ -46,7 +43,7 @@ module.exports = {
             {
                 id: 'area',
                 name: '地区',
-                data: $('.filter-item:nth-child(4) li').map((index, li) => {
+                data: $('#classCon ul:nth-child(4) li').map((index, li) => {
                     return {
                         'id': String(index),
                         'name': $(li).children('a').text()
