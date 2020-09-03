@@ -10,17 +10,6 @@ module.exports = {
             $ = cheerio.load(html)
         return [
             {
-                id: 'order',
-                name: '排序',
-                default: '0',
-                data: $('.Sub_H2 a').map((index, a) => {
-                    return {
-                        'id': $(a).attr('onclick').match(/sortClickAction\((\d+),/)[1],
-                        'name': $(a).text()
-                    }
-                }).get()
-            },
-            {
                 id: 'type',
                 name: '题材',
                 data: $('#classCon ul:nth-child(1) li').map((index, li) => {
@@ -47,6 +36,17 @@ module.exports = {
                     return {
                         'id': String(index),
                         'name': $(li).children('a').text()
+                    }
+                }).get()
+            },
+            {
+                id: 'order',
+                name: '排序',
+                default: '0',
+                data: $('.Sub_H2 a').map((index, a) => {
+                    return {
+                        'id': $(a).attr('onclick').match(/sortClickAction\((\d+),/)[1],
+                        'name': $(a).text()
                     }
                 }).get()
             },
