@@ -11,17 +11,6 @@ module.exports = {
             $ = cheerio.load(html)
         return [
             {
-                id: 'order',
-                name: '排序',
-                default: 'update',
-                data: $('.sorter li').map((index, li) => {
-                    return {
-                        'id': $(li).children('a').attr('href').match(/\/list\/(.*?)\/$/)[1],
-                        'name': $(li).children('a').text()
-                    }
-                }).get()
-            },
-            {
                 id: 'type',
                 name: '题材',
                 data: $('.filter-item:nth-child(1) li').map((index, li) => {
@@ -47,6 +36,17 @@ module.exports = {
                 data: $('.filter-item:nth-child(4) li').map((index, li) => {
                     return {
                         'id': $(li).children('a').attr('href').match(/\/list\/(.*?)\/?$/)[1],
+                        'name': $(li).children('a').text()
+                    }
+                }).get()
+            },
+            {
+                id: 'order',
+                name: '排序',
+                default: 'update',
+                data: $('.sorter li').map((index, li) => {
+                    return {
+                        'id': $(li).children('a').attr('href').match(/\/list\/(.*?)\/$/)[1],
                         'name': $(li).children('a').text()
                     }
                 }).get()
