@@ -55,13 +55,15 @@ module.exports = {
     },
 
     async all(ctx) {
-        let type = ctx.query.type ? ctx.query.type : '',
-            status = ctx.query.status ? ctx.query.status : '',
-            area = ctx.query.area ?  ctx.query.area : '',
-            order = ctx.query.order ?  ctx.query.order : 'update',
-            url = `${this.host}/list${(type || status || area) ? '/': ''}${type}${(type && status) ? '-': ''}${status}${status && area ? '-': ''}${area}/${order}/?page=${ctx.query.page ? ctx.query.page : 1}`,
+        let query = []
+        if(ctx.query.type) query.push(ctx.query.type)
+        if(ctx.query.status) query.push(ctx.query.status)
+        if(ctx.query.area) query.push(ctx.query.area)
+        let order = ctx.query.order ?  ctx.query.order : 'update',
+            url = `${this.host}/list${query.length>0 ? '/': ''}${query.join('-')}/${order}/?page=${ctx.query.page ? ctx.query.page : 1}`,
             html = await (await fetch(url)).text(),
             $ = cheerio.load(html)
+            console.log(url)
         return $('#comic-items>li').map((index, li) => {
             return {
                 id: $(li).children('.txtA').attr('href').match(/\/manhua\/(.+)\//)[1],
