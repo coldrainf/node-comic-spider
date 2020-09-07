@@ -83,7 +83,7 @@ module.exports = {
                     keywords: ctx.query.kw,
                 })
             })).json()
-        if(ctx.query.page && json._meta.pageCount > ctx.query.page) return []
+        if(ctx.query.page && ctx.query.page > json._meta.pageCount) return []
         return json.items.map(item => {
             return {
                 id: item.slug,
