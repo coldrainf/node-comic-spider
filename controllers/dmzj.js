@@ -4,7 +4,7 @@ const fetch = require('../util').fetch
 module.exports = {
     name: "动漫之家",
     host: "https://m.dmzj.com",
-
+    apiHost: "https://api.m.dmzj.com",
     async filter(ctx) {
         let html = await (await fetch(`${this.host}/classify.html`)).text(),
             $ = cheerio.load(html)
@@ -59,7 +59,7 @@ module.exports = {
             area = ctx.query.area ?  ctx.query.area : '0',
             order = ctx.query.order ?  ctx.query.order : '0',
             page = ctx.query.page ?  ctx.query.page-0 - 1 : '0',
-            url = `${this.host}/classify/${type}-0-${status}-${area}-${order}-${page}.json`,
+            url = `${this.apiHost}/classify/${type}-0-${status}-${area}-${order}-${page}.json`,
             html = await (await fetch(url)).json()
         return html.map(item => {
             return {
@@ -93,19 +93,20 @@ module.exports = {
 
     async item(ctx) {
         if(!ctx.query.id) throw new Error('missing parameter')
-        let html = await (await fetch(`${this.host}/info/${ctx.query.id}.html`)).text(),
-            $ = cheerio.load(html)
+        let data = await (await fetch(`${this.apiHost}/info/${ctx.query.id}.html`)).json(),
+            comic = data.comic,
+            date = new Date(comic.last_updatetime*1000)
         return {
             id: ctx.query.id,
-            name: $('#comicName').text(),
-            cover: $('#Cover').find('img').attr('src'),
-            author: $('.sub_r p:nth-child(1)').find('a').map((index, a) => $(a).text()).get(),
-            type: $('.sub_r p:nth-child(2) a').map((index, a) => $(a).text()).get(),
-            area: $('.sub_r p:nth-child(3) a').eq(1).text(),
-            status: $('.sub_r p:nth-child(3) a').eq(2).text(),
-            updateTime: $('.date').text(),
-            desc: $('head meta[name=Description]').attr('content').match(/漫画介绍：(.+)/)[1],
-            chapters: JSON.parse(html.match(/initIntroData\((\[.*\])\);/)[1]).map(item => {
+            name: comic.name,
+            cover: comic.cover,
+            author: comic.authors.split('/'),
+            type: comic.types.split('/'),
+            area: comic.zone,
+            status: comic.status,
+            updateTime: `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`,
+            desc: comic.introduction,
+            chapters: JSON.parse(data.chapter_json).map(item => {
                 return {
                     title: item.title,
                     data: item.data.map(d => {
@@ -121,22 +122,20 @@ module.exports = {
 
     async image(ctx) {
         if(!ctx.query.id || !ctx.query.chapterId) throw new Error('missing parameter')
-        let html = await (await fetch(`${this.host}/view/${ctx.query.id}/${ctx.query.chapterId}.html`)).text(),
-            match = html.match(/initData\((\{.*\}), "(.*?)", "(.*?)"\);/),
-            data = JSON.parse(match[1])
+        let data = await (await fetch(`${this.apiHost}/comic/chapter/${ctx.query.id}/${ctx.query.chapterId}.html`)).json(),
+            chapter = data.chapter
         return {
             id: ctx.query.id,
-            name: match[2],
-            cover: 'https://images.dmzj.com/' + match[3],
-            data,
+            name: data.comic_name,
+            cover: 'https://images.dmzj.com/' + data.comic_cover,
             chapterId: ctx.query.chapterId,
-            chapterName: data.chapter_name,
-            images: data.page_url,
+            chapterName: chapter.chapter_name,
+            images: chapter.page_url,
             prev: {
-                id: data.prev_chap_id ? data.prev_chap_id : null
+                id: chapter.prev_chap_id ? chapter.prev_chap_id : null
             },
             next: {
-                id: data.next_chap_id ? data.next_chap_id : null
+                id: chapter.next_chap_id ? chapter.next_chap_id : null
             }
         }
     },

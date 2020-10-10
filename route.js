@@ -17,12 +17,12 @@ for(let file of files) {
     for(let c in controller) {
         if(typeof controller[c] === 'function') {
             router.get(`/${name}/${c}`, async ctx => {
-                let data = await controller[c](ctx)
-                if(name != 'all') {
-                    if(Array.isArray(data)) data.map(item => addOrigin(item, name, controller.name))
-                    else addOrigin(data, name, controller.name)
-                }
                 try {
+                    let data = await controller[c](ctx)
+                    if(name != 'all') {
+                        if(Array.isArray(data)) data.map(item => addOrigin(item, name, controller.name))
+                        else addOrigin(data, name, controller.name)
+                    }
                     ctx.body = {
                         code: 0,
                         data
