@@ -75,20 +75,16 @@ module.exports = {
     async search(ctx) {
         if(!ctx.query.kw) throw new Error('missing parameter')
         if(ctx.query.page && ctx.query.page > 1) return []
-        let html = await (await fetch(`${this.host}/search/${encodeURIComponent(ctx.query.kw)}.html`)).text(),
-            match = html.match(/var serchArry=(\[.+\])/)
-        if(match) {
-            let data = JSON.parse(match[1])
-            return data.map(item => {
-                return {
-                    id: item.id,
-                    name: item.name,
-                    cover: 'https://images.dmzj.com/' + item.cover,
-                    lastChapterId: item.last_update_chapter_id,
-                    lastChapterName: item.last_update_chapter_name,
-                }
-            })
-        }else return []
+        let data = await (await fetch(`${this.apiHost}/search/${encodeURIComponent(ctx.query.kw)}`)).json()
+        return data.map(item => {
+            return {
+                id: item.id,
+                name: item.name,
+                cover: 'https://images.dmzj.com/' + item.cover,
+                lastChapterId: item.last_update_chapter_id,
+                lastChapterName: item.last_update_chapter_name,
+            }
+        })
     },
 
     async item(ctx) {

@@ -103,13 +103,14 @@ module.exports = {
             id: ctx.query.id,
             name: $('#comicName').text(),
             cover: $('#Cover').find('img').attr('src'),
-            author: $('.sub_r p:nth-child(1)').text().match(/^\s+(\S+)\s+$/)[1].split(','),
+            author: $('.sub_r p:nth-child(1)').text().match(/^\s+(.+?)\s+$/)[1].split(','),
             type: $('.sub_r p:nth-child(2) a').map((index, a) => $(a).text()).get(),
             area: $('.sub_r p:nth-child(3) a').eq(1).text(),
             status: $('.sub_r p:nth-child(3) a').eq(2).text(),
             updateTime: $('.date').text(),
             desc: $('#full-des').text() ? $('#full-des').text() : $('#simple-des').text(),
             chapters: $('#list_block>div').map((index, div) => {
+                console.log($(div).find('li a').length)
                 return {
                     title: $(div).find('.Title').text(),
                     data: $(div).find('li a').map((index, a) => {
