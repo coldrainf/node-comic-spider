@@ -110,7 +110,6 @@ module.exports = {
             updateTime: $('.date').text(),
             desc: $('#full-des').text() ? $('#full-des').text() : $('#simple-des').text(),
             chapters: $('#list_block>div').map((index, div) => {
-                console.log($(div).find('li a').length)
                 return {
                     title: $(div).find('.Title').text(),
                     data: $(div).find('li a').map((index, a) => {
